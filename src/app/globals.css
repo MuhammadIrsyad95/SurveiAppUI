@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Warna global dengan CSS variables */
 :root {
-  --background: #ffffff;
+  --background: #f9fafb; /* putih soft, abu-abu sangat terang */
   --foreground: #171717;
+  --primary: #1a73e8; /* warna biru Google */
+  --secondary: #5f6368;
+  --font-sans: 'Roboto', Arial, Helvetica, sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #202124;
+    --foreground: #e8eaed;
+    --primary: #8ab4f8;
+    --secondary: #9aa0a6;
   }
 }
 
+/* Terapkan ke body */
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Link styling */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover,
+a:focus {
+  color: #174ea6; /* warna biru lebih gelap */
+  outline: none;
+  text-decoration: underline;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+/* Paragraph */
+p {
+  margin-bottom: 1em;
+  color: var(--secondary);
 }
