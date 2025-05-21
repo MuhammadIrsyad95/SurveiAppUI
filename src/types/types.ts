@@ -20,7 +20,7 @@ export interface Question {
   id: string;
   formId: string;
   text: string;
-  type: QuestionType;
+  type: string;
   isRequired: boolean;
   choices?: Choice[];
   answers?: Answer[];

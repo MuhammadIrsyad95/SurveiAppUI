@@ -1,149 +1,166 @@
+// src/app/Form/[id]/FormBuilder.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Question, Choice } from '@/types/types';
-import { v4 as uuidv4 } from 'uuid';
+import { Form, Question } from '@/types/types';
+import { QuestionType } from '@/types/enums';
 
 interface Props {
-  initialForm: Form;
-  onSave: (form: Form) => Promise<void>;
+  form: Form;
 }
 
-export default function FormBuilder({ initialForm, onSave }: Props) {
-  const [form, setForm] = useState<Form>(initialForm);
-  const [saving, setSaving] = useState(false);
+export default function FormBuilder({ form }: Props) {
+  const [questions, setQuestions] = useState<Question[]>(form.questions || []);
+  const [title, setTitle] = useState(form.title);
+  const [description, setDescription] = useState(form.description || '');
 
-  // Update form title or description
-  const updateFormField = (field: 'title' | 'description', value: string) => {
-    setForm((f) => ({ ...f, [field]: value }));
-  };
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
+  const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
 
-  // Add new question
-  const addQuestion = () => {
+  const handleAddQuestion = () => {
     const newQuestion: Question = {
-      id: uuidv4(),
+      id: `${Date.now()}`,
       formId: form.id,
       text: '',
-      type: 'text',
+      type: QuestionType.Text,
       isRequired: false,
       choices: [],
     };
-    setForm((f) => ({ ...f, questions: [...(f.questions ?? []), newQuestion] }));
+    setQuestions([...questions, newQuestion]);
   };
 
-  // Update question field
-  const updateQuestion = (questionId: string, field: keyof Question, value: any) => {
-    setForm((f) => ({
-      ...f,
-      questions: f.questions?.map((q) =>
-        q.id === questionId ? { ...q, [field]: value } : q
-      ),
-    }));
+  const handleDelete = (index: number) => {
+    const updated = [...questions];
+    updated.splice(index, 1);
+    setQuestions(updated);
   };
 
-  // Delete question
-  const deleteQuestion = (questionId: string) => {
-    setForm((f) => ({
-      ...f,
-      questions: f.questions?.filter((q) => q.id !== questionId),
-    }));
+  const handleQuestionChange = (index: number, key: keyof Question, value: any) => {
+    const updated = [...questions];
+    updated[index][key] = value;
+
+    // Reset choices if type changed to text
+    if (key === 'type' && value === QuestionType.Text) {
+      updated[index].choices = [];
+    }
+
+    setQuestions(updated);
   };
 
-  // TODO: add update choices logic later
+  const handleChoiceChange = (index: number, choiceIndex: number, value: string) => {
+    const updated = [...questions];
+    if (!updated[index].choices) updated[index].choices = [];
+    updated[index].choices![choiceIndex].text = value;
+    setQuestions(updated);
+  };
 
-  const handleSave = async () => {
-    setSaving(true);
-    await onSave(form);
-    setSaving(false);
+  const handleAddChoice = (index: number) => {
+    const updated = [...questions];
+    if (!updated[index].choices) updated[index].choices = [];
+    updated[index].choices!.push({ id: `${Date.now()}`, questionId: updated[index].id, text: '' });
+    setQuestions(updated);
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">Edit Form</h1>
-
+    <div className="max-w-4xl mx-auto p-6 space-y-6 bg-white dark:bg-zinc-900 rounded-lg shadow">
       <div>
-        <label className="block font-semibold mb-1">Title</label>
         <input
           type="text"
-          value={form.title}
-          onChange={(e) => updateFormField('title', e.target.value)}
-          className="border p-2 w-full rounded"
+          value={title}
+          onChange={handleTitleChange}
+          className="w-full text-3xl font-bold text-zinc-900 dark:text-white bg-transparent border-none focus:ring-0 focus:outline-none"
+          placeholder="Form Title"
         />
-      </div>
-
-      <div>
-        <label className="block font-semibold mb-1">Description</label>
         <textarea
-          value={form.description ?? ''}
-          onChange={(e) => updateFormField('description', e.target.value)}
-          className="border p-2 w-full rounded"
-          rows={3}
+          value={description}
+          onChange={handleDescChange}
+          rows={2}
+          className="w-full text-zinc-700 dark:text-zinc-300 mt-2 bg-transparent border-none focus:ring-0 focus:outline-none"
+          placeholder="Form description..."
         />
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold mb-2">Questions</h2>
+      {questions.map((q, index) => (
+        <div key={q.id} className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-5 space-y-4 shadow-sm border border-zinc-200 dark:border-zinc-700">
+          <div className="flex justify-between items-center">
+            <input
+              type="text"
+              value={q.text}
+              onChange={(e) => handleQuestionChange(index, 'text', e.target.value)}
+              className="w-full text-lg font-medium text-zinc-800 dark:text-zinc-100 bg-transparent border-b focus:outline-none focus:ring-0"
+              placeholder={`Question ${index + 1}`}
+            />
+            <button
+              onClick={() => handleDelete(index)}
+              className="text-red-500 hover:text-red-700 ml-4"
+              type="button"
+            >
+              Delete
+            </button>
+          </div>
 
-        {(form.questions ?? []).map((q, i) => (
-          <div key={q.id} className="border p-3 rounded mb-4">
-            <div className="flex justify-between mb-2">
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
               <input
-                type="text"
-                placeholder={`Question ${i + 1} text`}
-                value={q.text}
-                onChange={(e) => updateQuestion(q.id, 'text', e.target.value)}
-                className="border p-1 flex-grow rounded"
+                type="checkbox"
+                checked={q.isRequired}
+                onChange={(e) => handleQuestionChange(index, 'isRequired', e.target.checked)}
               />
+              Required
+            </label>
 
+            <select
+              value={q.type}
+              onChange={(e) => handleQuestionChange(index, 'type', e.target.value)}
+              className="text-sm border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 dark:bg-zinc-700 dark:text-white"
+            >
+              <option value={QuestionType.Text}>Text</option>
+              <option value={QuestionType.MultipleChoice}>Multiple Choice</option>
+              <option value={QuestionType.Checkbox}>Checkbox</option>
+            </select>
+          </div>
+
+          {(q.type === QuestionType.MultipleChoice || q.type === QuestionType.Checkbox) && (
+            <div className="space-y-2">
+              {q.choices?.map((choice, choiceIndex) => (
+                <input
+                  key={choice.id}
+                  type="text"
+                  value={choice.text}
+                  onChange={(e) => handleChoiceChange(index, choiceIndex, e.target.value)}
+                  placeholder={`Choice ${choiceIndex + 1}`}
+                  className="w-full border border-zinc-300 dark:border-zinc-600 rounded px-3 py-1 text-sm dark:bg-zinc-800 dark:text-white"
+                />
+              ))}
               <button
-                onClick={() => deleteQuestion(q.id)}
-                className="ml-2 text-red-600 hover:underline"
+                type="button"
+                onClick={() => handleAddChoice(index)}
+                className="text-blue-600 hover:underline text-sm"
               >
-                Delete
+                + Add choice
               </button>
             </div>
+          )}
+        </div>
+      ))}
 
-            <div className="flex items-center space-x-4 mb-2">
-              <select
-                value={q.type}
-                onChange={(e) => updateQuestion(q.id, 'type', e.target.value)}
-                className="border p-1 rounded"
-              >
-                <option value="text">Text</option>
-                <option value="multiple_choice">Multiple Choice (Single)</option>
-                <option value="checkbox">Checkboxes (Multiple)</option>
-              </select>
-
-              <label className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={q.isRequired}
-                  onChange={(e) => updateQuestion(q.id, 'isRequired', e.target.checked)}
-                />
-                <span>Required</span>
-              </label>
-            </div>
-
-            {/* TODO: Choices editor if multiple_choice or checkbox */}
-
-          </div>
-        ))}
-
+      <div className="flex justify-between pt-4">
         <button
-          onClick={addQuestion}
-          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          type="button"
+          onClick={handleAddQuestion}
+          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 font-semibold transition"
         >
           + Add Question
         </button>
-      </div>
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : 'Save Form'}
-      </button>
+        <button
+          type="button"
+          onClick={() => alert('💾 Simpan ke backend belum diimplementasikan')}
+          className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 font-semibold transition"
+        >
+          Save Form
+        </button>
+      </div>
     </div>
   );
 }

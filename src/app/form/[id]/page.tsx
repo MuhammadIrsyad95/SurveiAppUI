@@ -1,3 +1,4 @@
+//src/app/form/[id]/page.tsx
 import { Form } from '@/types/types';
 import FormComponent from './FormComponent';
 import { fetchWithAgent } from '@/lib/fetch'; // ✅ Import helper
