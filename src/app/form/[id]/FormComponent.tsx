@@ -88,7 +88,9 @@ export default function FormComponent({ form }: Props) {
         <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">{form.title}</h2>
         <p className="text-zinc-600 dark:text-zinc-400">{form.description}</p>
       </div>
-
+      <div>
+        <img className="text-3xl font-bold text-zinc-900 dark:text-white">{form.imageUrl}</img>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block font-medium mb-1 text-zinc-800 dark:text-zinc-200">Your Name</label>

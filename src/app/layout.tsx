@@ -19,14 +19,18 @@ export default function RootLayout({
       <body className="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
         <Header />
 
-        <main className="max-w-3xl mx-auto p-6 flex-grow">
+        <main className="w-full flex-grow p-6">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-center">Survey Form App</h1>
           </header>
-          {children}
-        </main>
-        <Footer />
 
+          {/* Wrapper to ensure children take full width */}
+          <div className="w-full h-full">
+            {children}
+          </div>
+        </main>
+
+        <Footer />
       </body>
     </html>
   );

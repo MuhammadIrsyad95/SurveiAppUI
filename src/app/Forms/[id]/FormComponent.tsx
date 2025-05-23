@@ -1,4 +1,3 @@
-// src/app/Form/[id]/FormComponent.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -49,7 +48,7 @@ export default function FormComponent({ form }: Props) {
 
       if (q.type === 'checkbox' && Array.isArray(ans)) {
         ans.forEach((choiceId) => acc.push({ questionId: q.id, choiceId, answerText: undefined }));
-      } else if (q.type === 'multiple_choice' && typeof ans === 'string') {
+      } else if (typeof ans === 'string') {
         acc.push({ questionId: q.id, choiceId: ans, answerText: undefined });
       } else if (q.type === 'text' && typeof ans === 'string') {
         acc.push({ questionId: q.id, choiceId: null, answerText: ans });
@@ -76,7 +75,7 @@ export default function FormComponent({ form }: Props) {
       setAnswers({});
       setName('');
     } catch {
-      setMessage('❌ Submission failed. Please try again.');
+      setMessage('Submission failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -88,6 +87,16 @@ export default function FormComponent({ form }: Props) {
         <h2 className="text-3xl font-bold text-zinc-900 dark:text-white">{form.title}</h2>
         <p className="text-zinc-600 dark:text-zinc-400">{form.description}</p>
       </div>
+
+      {form.imageUrl && (
+        <div className="mb-4">
+          <img
+            src={`${process.env.NEXT_PUBLIC_API_BASE}${form.imageUrl}`}
+            alt={form.title}
+            className="w-full h-48 object-cover rounded-lg border border-gray-200"
+          />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -116,24 +125,6 @@ export default function FormComponent({ form }: Props) {
                 className="w-full border border-zinc-300 dark:border-zinc-700 rounded px-4 py-2 dark:bg-zinc-800 dark:text-white"
               />
             )}
-
-            {(q.type === 'multiple_choice' || q.type === 'checkbox') && q.choices?.map((choice) => (
-              <label key={choice.id} className="flex items-center space-x-2 text-zinc-700 dark:text-zinc-300">
-                <input
-                  type={q.type === 'multiple_choice' ? 'radio' : 'checkbox'}
-                  name={q.id}
-                  value={choice.id}
-                  checked={
-                    q.type === 'multiple_choice'
-                      ? answers[q.id] === choice.id
-                      : (answers[q.id] as string[] | undefined)?.includes(choice.id) ?? false
-                  }
-                  onChange={() => handleChange(q.id, choice.id, q.type === 'checkbox')}
-                  className="accent-blue-600"
-                />
-                <span>{choice.text}</span>
-              </label>
-            ))}
 
             {errors.includes(q.text) && (
               <p className="text-sm text-red-500">This question is required.</p>

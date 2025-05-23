@@ -1,5 +1,15 @@
 // src/types/types.ts
-import { QuestionType } from './enums';
+
+export type QuestionType =
+  | "text"
+  | "paragraph"
+  | "multiple-choice"
+  | "checkbox"
+  | "number"
+  | "date"
+  | "time"
+  | "dropdown";
+
 
 export interface Choice {
   id: string;
@@ -20,7 +30,7 @@ export interface Question {
   id: string;
   formId: string;
   text: string;
-  type: string;
+  type: QuestionType;
   isRequired: boolean;
   choices?: Choice[];
   answers?: Answer[];
@@ -39,6 +49,7 @@ export interface Form {
   title: string;
   description: string;
   createdAt: string;
+  imageUrl?: string | null;
   questions?: Question[];
   responses?: Response[];
 }

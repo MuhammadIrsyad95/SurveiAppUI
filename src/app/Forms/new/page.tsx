@@ -1,8 +1,8 @@
-//Form/new/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageUpload from "@/app/components/newForm/ImageUpload"
 
 type Choice = { id: string; text: string };
 type Question = {
@@ -19,7 +19,8 @@ export default function NewFormPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
-
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,29 +43,21 @@ export default function NewFormPage() {
 
   const addChoice = (questionId: string) => {
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id === questionId) {
-          return {
-            ...q,
-            choices: [...q.choices, { id: crypto.randomUUID(), text: "" }],
-          };
-        }
-        return q;
-      })
+      prev.map((q) =>
+        q.id === questionId
+          ? { ...q, choices: [...q.choices, { id: crypto.randomUUID(), text: "" }] }
+          : q
+      )
     );
   };
 
   const removeChoice = (questionId: string, choiceId: string) => {
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id === questionId) {
-          return {
-            ...q,
-            choices: q.choices.filter((c) => c.id !== choiceId),
-          };
-        }
-        return q;
-      })
+      prev.map((q) =>
+        q.id === questionId
+          ? { ...q, choices: q.choices.filter((c) => c.id !== choiceId) }
+          : q
+      )
     );
   };
 
@@ -105,16 +98,31 @@ export default function NewFormPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) throw new Error("Missing API URL");
 
+      let imageUrl = "";
+      if (image) {
+        const formData = new FormData();
+        formData.append("file", image);
+
+        const uploadRes = await fetch(`${apiUrl}/Forms/upload-image`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) throw new Error("Failed to upload image.");
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.url;
+      }
+
       const res = await fetch(`${apiUrl}/Forms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, questions }),
+        body: JSON.stringify({ title, description, questions, imageUrl }),
       });
 
       if (!res.ok) throw new Error("Failed to create form.");
 
       const newForm = await res.json();
-      router.push(`/form/${newForm.id}`);
+      router.push(`/Forms/${newForm.id}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -127,6 +135,16 @@ export default function NewFormPage() {
       <h1 className="text-4xl font-semibold mb-8 text-gray-900">Create New Form</h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Upload Image */}
+       <section><ImageUpload
+  onImageChange={(file, url) => {
+    setImage(file);
+    setPreviewUrl(url);
+  }}
+/>
+       </section>
+
+
         {/* Title & Description */}
         <section>
           <label htmlFor="title" className="block text-lg font-medium text-gray-700 mb-2">
@@ -240,7 +258,6 @@ export default function NewFormPage() {
                 <span className="text-gray-700">Required</span>
               </label>
 
-              {/* Choices */}
               {q.type === "multiple-choice" && (
                 <div className="pl-4 border-l-4 border-blue-400 bg-blue-50 rounded-md p-4">
                   <label className="block font-semibold mb-3 text-blue-700">
@@ -301,14 +318,12 @@ export default function NewFormPage() {
           </button>
         </section>
 
-        {/* Error message */}
         {error && (
           <p className="text-red-600 font-semibold bg-red-100 p-3 rounded-md mt-4">
             {error}
           </p>
         )}
 
-        {/* Submit button */}
         <button
           type="submit"
           disabled={loading}
