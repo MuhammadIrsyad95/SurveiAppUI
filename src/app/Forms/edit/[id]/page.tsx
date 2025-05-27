@@ -57,7 +57,7 @@ export default function EditFormPage() {
         throw new Error(text || `Failed to save form (status ${res.status})`);
       }
 
-      router.push(`/form/${id}`);
+      router.push(`/Forms/${id}`);
     } catch (e: any) {
       setError(e.message || "Failed to save form");
     } finally {

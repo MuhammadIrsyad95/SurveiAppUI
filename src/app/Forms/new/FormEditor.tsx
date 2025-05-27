@@ -15,6 +15,7 @@ export type FormData = {
   id?: string;
   title: string;
   description: string;
+    imageFile?: File | null;     
   questions: Question[];
 };
 
@@ -28,11 +29,15 @@ export default function FormEditor({ initialData, onChange }: FormEditorProps) {
   const [description, setDescription] = useState(initialData?.description || "");
   const [questions, setQuestions] = useState<Question[]>(initialData?.questions || []);
 
-  useEffect(() => {
-    if (onChange) {
-      onChange({ id: initialData?.id, title, description, questions });
-    }
-  }, [title, description, questions, initialData?.id, onChange]);
+ useEffect(() => {
+  if (!onChange) return;
+
+  const timeout = setTimeout(() => {
+    onChange({ id: initialData?.id, title, description, questions });
+  }, 300); // delay 300ms
+
+  return () => clearTimeout(timeout); // cleanup
+}, [title, description, questions, initialData?.id, onChange]);
 
   const addQuestion = () => {
     setQuestions((prev) => [
