@@ -1,9 +1,8 @@
-// src/app/Form/[id]/FormBuilder.tsx
+// src/app/Forms/[id]/FormBuilder.tsx
 'use client';
 
 import React, { useState } from 'react';
 import { Form, Question } from '@/types/types';
-import { QuestionType } from '@/types/enums';
 
 interface Props {
   form: Form;
@@ -17,12 +16,25 @@ export default function FormBuilder({ form }: Props) {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
   const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
 
+  // Membuat fungsi dengan overload agar value tipe cocok dengan key yang dipilih
+  function handleQuestionChange<K extends keyof Question>(index: number, key: K, value: Question[K]) {
+    const updated = [...questions];
+    updated[index][key] = value;
+
+    // Reset choices jika tipe diubah ke "text"
+    if (key === 'type' && value === "text") {
+      updated[index].choices = [];
+    }
+
+    setQuestions(updated);
+  }
+
   const handleAddQuestion = () => {
     const newQuestion: Question = {
       id: `${Date.now()}`,
       formId: form.id,
       text: '',
-      type: QuestionType.Text,
+      type: "text", // string literal sesuai tipe QuestionType
       isRequired: false,
       choices: [],
     };
@@ -32,18 +44,6 @@ export default function FormBuilder({ form }: Props) {
   const handleDelete = (index: number) => {
     const updated = [...questions];
     updated.splice(index, 1);
-    setQuestions(updated);
-  };
-
-  const handleQuestionChange = (index: number, key: keyof Question, value: any) => {
-    const updated = [...questions];
-    updated[index][key] = value;
-
-    // Reset choices if type changed to text
-    if (key === 'type' && value === QuestionType.Text) {
-      updated[index].choices = [];
-    }
-
     setQuestions(updated);
   };
 
@@ -111,16 +111,16 @@ export default function FormBuilder({ form }: Props) {
 
             <select
               value={q.type}
-              onChange={(e) => handleQuestionChange(index, 'type', e.target.value)}
+              onChange={(e) => handleQuestionChange(index, 'type', e.target.value as Question['type'])}
               className="text-sm border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 dark:bg-zinc-700 dark:text-white"
             >
-              <option value={QuestionType.Text}>Text</option>
-              <option value={QuestionType.MultipleChoice}>Multiple Choice</option>
-              <option value={QuestionType.Checkbox}>Checkbox</option>
+              <option value="text">Text</option>
+              <option value="multiple-choice">Multiple Choice</option>
+              <option value="checkbox">Checkbox</option>
             </select>
           </div>
 
-          {(q.type === QuestionType.MultipleChoice || q.type === QuestionType.Checkbox) && (
+          {(q.type === "multiple-choice" || q.type === "checkbox") && (
             <div className="space-y-2">
               {q.choices?.map((choice, choiceIndex) => (
                 <input
